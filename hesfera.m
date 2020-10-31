@@ -1,11 +1,10 @@
-function [g,h] = hesfera(x)
+function [h] = hesfera(x)
 % Función de restricciones del problema de np puntos en la esfera unitaria
 % de dimensión tres.
 %
 %  Optimzación Numérica
 % ITAM
 % 20 de octubre de 2020
-g =[];     % uso de fmincon.m en Matlab
 
 n = length(x);
 np = floor(n/3);
