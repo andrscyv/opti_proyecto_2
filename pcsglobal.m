@@ -51,23 +51,13 @@ while( norm(v) >= tol && k <= maxk)
         C = min( 1e5, abs(gf'*p)/norm(h,1) +1);
     end
 
-%     % Escogemos Ck+1 tal que Dpkphi(xk,Ck+1)<0
-%     C = gf'*p/norm(h,1);
-%     
-%     if C < 0
-%         C = -1*C;
-%     end
-%     
-%     C = C + 1;
-    
     %Busqueda de linea
     alpha = 1;
-    phi = feval(fx,x)-C*norm(h,1);
-    phi_paso = feval(fx, x + p) - C*norm(h,1);
+%     phi = feval(fx,x)+C*norm(h,1);
+    phi = funcion_merito(x,C, fx, hx);
     D = gf'*p - C*norm(h,1);
-    while( phi_paso > phi + alpha*c1*D)
+    while( funcion_merito(x + alpha*p,C, fx,hx) > phi + alpha*c1*D)
         alpha = alpha/2;
-        phi_paso = feval(fx,x + alpha*p) - C*norm(h,1);
     end
 
      % Calcular la nueva matriz B
