@@ -1,13 +1,15 @@
-function [x, lambda, k] = pcsglobal(fx, hx, x0)
-% MÃ©todo de programacion Cuadratica Sucesiva con busqueda de linea,
+function [x, lambda, k,v] = pcsglobal(fx, hx, x0)
+% Metodo de programacion Cuadratica Sucesiva con busqueda de linea,
 % usando la funcion de merito L-1 y actualizacion de la hessiana
 % con la formula BFGS para el problema
 % Min fx
 % Sujeto a hx = 0
 %
+% Entradas
 % fx y hx son cadenas de caracteres con las funciones en Matlab
 % de la funcion objetivo y las restricciones del problema
 % El vector x0 es el valor inicial
+%
 % Salida
 % x.- aproximacion al minimo local
 % lambda.- multiplicador de Lagrange asociado a x.
@@ -15,8 +17,10 @@ function [x, lambda, k] = pcsglobal(fx, hx, x0)
 %
 % Debe usar las funciones: gradiente.m y jacobiana.m para calcular
 % las primeras derivadas.
-%
-% Javier Montiel Gonzalez 159216, Alexis Ayala Redon 156916
+% -------------------------------------------------------------------------
+% Equipo: 
+% Javier Montiel Gonzalez 159216
+% Alexis Ayala Redon 156916
 % Andres Cruz y Vera 155899
 
 % Parámetros inciales
@@ -33,35 +37,39 @@ m = length(h); % Dimension de las restricciones
 lambda = zeros(m,1); %Inicializamos el multiplicador de Lagrange
 B = eye(n); % Inicializamos la aproximacion a la Hessiana
 
-% Condiciones necesarias de primer orden
 gf = gradiente(fx,x0);
 jh = jacobiana(hx, x0);
 
+% Condiciones necesarias de primer orden
 v = [ gf + jh'*lambda; h];
 x = x0;
 k = 1;
 
 while( norm(v) >= tol && k <= maxk)
+    
+    % Resolvemos el subproblema cuadrático con restricciones con la funcion
+    % de puntos interiores de MatLab
     [p, ~, ~, ~, lambda] = quadprog(B, gf, [],[],jh, -h);
     lambda = lambda.eqlin;
-%   [p, lambda] = pc(B, jh, gf, -h);
     
-    % Buscamos que la derivada direccional sea una direccion de descenso
-    if (gf'*p - C*norm(h,1) >= 0)
-        C = min( 1e5, abs(gf'*p)/norm(h,1) +1);
+    % Buscamos que la derivada direccional en p sea una direccion de
+    % descenso
+    norm1H=norm(h,1);
+    if (gf'*p - C*norm1H >= 0)
+        C = min( 1e5, abs(gf'*p)/norm1H +1);
     end
 
     %Busqueda de linea
     alpha = 1;
-%     phi = feval(fx,x)+C*norm(h,1);
     phi = funcion_merito(x,C, fx, hx);
-    D = gf'*p - C*norm(h,1);
+    D = gf'*p - C*norm1H;
     while( funcion_merito(x + alpha*p,C, fx,hx) > phi + alpha*c1*D)
         alpha = alpha/2;
     end
 
-     % Calcular la nueva matriz B
-    xn = x + alpha*p; % x_k+1
+    % Calcular la nueva matriz B con el metodo BFGS con la actualizacion de
+    % Powell
+    xn = x + alpha*p; 
     s = xn-x;
     gfn = gradiente(fx,xn);
     jhn = jacobiana(hx,xn);
@@ -82,16 +90,18 @@ while( norm(v) >= tol && k <= maxk)
 
     %Si B es mal condicionada
     if(rcond(B)<1e-04)
-        B = norm(v)*eye(n);
+        B = eye(n);
     end
 
+    % Calculamos el nuevo multiplicador de Lagrange
     lambda = (jhn * jhn')\(jhn*(-gfn));
+    
+    % Actualizamos los valores
     x = xn;
     k = k + 1;
     gf = gfn;
     jh = jhn;
     h = feval(hx,x);
     v = [ gf + jh'*lambda; h];
-
 end
 end
