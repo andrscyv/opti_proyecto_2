@@ -33,7 +33,6 @@ end
  n=length(x);
  for j = 1:3:n-2
     plot3(x(j), x(j+1), x(j+2),'rd','Linewidth',3);
-    hold on
 end
 
 
